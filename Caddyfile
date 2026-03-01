@@ -1,14 +1,17 @@
+# HTTPS on non-standard port 9443
+# TLS cert is issued via HTTP-01 challenge (port 80)
+{
+    https_port 9443
+}
+
 troyumba.ru {
-    # Сжатие ответов
     encode gzip
 
-    # Логи запросов
     log {
         output stdout
         format console
     }
 
-    # Security headers
     header {
         X-Content-Type-Options nosniff
         X-Frame-Options DENY
@@ -16,7 +19,7 @@ troyumba.ru {
         -Server
     }
 
-    # API запросы → Node.js backend
+    # API -> Node.js backend
     @api path /api/*
     handle @api {
         reverse_proxy backend:3000 {
@@ -25,16 +28,15 @@ troyumba.ru {
         }
     }
 
-    # Статика: frontend файлы
+    # Static frontend files
     handle {
         root * /srv/frontend
-        # Обслуживать .html файлы без расширения в URL
         try_files {path} {path}.html /index.html
         file_server
     }
 }
 
-# Редирект www → без www
+# www -> non-www redirect
 www.troyumba.ru {
     redir https://troyumba.ru{uri} permanent
 }
