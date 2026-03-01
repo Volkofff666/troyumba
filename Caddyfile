@@ -1,10 +1,10 @@
-# HTTPS on non-standard port 9443
-# TLS cert is issued via HTTP-01 challenge (port 80)
+# HTTP-only: TLS is terminated by Cloudflare proxy
+# Cloudflare (443 HTTPS) → VPS port 80 (HTTP) → Caddy
 {
-    https_port 9443
+    auto_https off
 }
 
-troyumba.ru {
+http://troyumba.ru {
     encode gzip
 
     log {
@@ -23,8 +23,9 @@ troyumba.ru {
     @api path /api/*
     handle @api {
         reverse_proxy backend:3000 {
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Real-IP {remote_host}
+            # Real visitor IP comes from Cloudflare header
+            header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+            header_up X-Real-IP {http.request.header.CF-Connecting-IP}
         }
     }
 
@@ -37,6 +38,6 @@ troyumba.ru {
 }
 
 # www -> non-www redirect
-www.troyumba.ru {
-    redir https://troyumba.ru{uri} permanent
+http://www.troyumba.ru {
+    redir http://troyumba.ru{uri} permanent
 }
