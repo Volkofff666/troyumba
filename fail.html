@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Платёж не выполнен — Troymba</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .result-page {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      background: var(--c-bg);
+    }
+    .result-card {
+      background: white;
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-xl);
+      padding: 3rem 2.5rem;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    .result-icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--c-danger-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      color: var(--c-danger);
+      margin: 0 auto 2rem;
+    }
+    .result-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+      color: var(--c-text);
+    }
+    .result-desc {
+      font-size: 1rem;
+      color: var(--c-text-muted);
+      line-height: 1.65;
+      margin-bottom: 2rem;
+    }
+    .result-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    @media (min-width: 400px) {
+      .result-btns { flex-direction: row; justify-content: center; }
+    }
+    .reasons-list {
+      text-align: left;
+      background: var(--c-bg);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+      font-size: 0.875rem;
+      color: var(--c-text-muted);
+    }
+    .reasons-list li {
+      padding: 0.35rem 0;
+      list-style: none;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .reasons-list li::before {
+      content: '·';
+      color: var(--c-danger);
+      font-weight: 700;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="result-page">
+    <div class="result-card">
+      <div class="result-icon">
+        <i class="fas fa-times"></i>
+      </div>
+      <h1 class="result-title">Платёж не выполнен</h1>
+      <p class="result-desc">
+        К сожалению, оплата не прошла. Деньги с вашего счёта не списаны.
+      </p>
+
+      <ul class="reasons-list">
+        <li>Недостаточно средств на карте</li>
+        <li>Карта заблокирована или истёк срок</li>
+        <li>Операция отклонена банком</li>
+        <li>Сессия оплаты истекла</li>
+      </ul>
+
+      <div class="result-btns">
+        <a href="index.html#pricing" class="btn btn-primary">
+          <i class="fas fa-redo"></i> Попробовать снова
+        </a>
+        <a href="index.html" class="btn btn-ghost">
+          На главную
+        </a>
+      </div>
+    </div>
+
+    <p style="margin-top:1.5rem; font-size:0.82rem; color:var(--c-text-muted); text-align:center;">
+      Нужна помощь? <a href="mailto:support@troyumba.ru" style="color:var(--c-primary);">support@troyumba.ru</a>
+    </p>
+  </div>
+</body>
+</html>

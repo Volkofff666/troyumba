@@ -1,0 +1,40 @@
+troyumba.ru {
+    # Сжатие ответов
+    encode gzip
+
+    # Логи запросов
+    log {
+        output stdout
+        format console
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    # API запросы → Node.js backend
+    @api path /api/*
+    handle @api {
+        reverse_proxy backend:3000 {
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Real-IP {remote_host}
+        }
+    }
+
+    # Статика: frontend файлы
+    handle {
+        root * /srv/frontend
+        # Обслуживать .html файлы без расширения в URL
+        try_files {path} {path}.html /index.html
+        file_server
+    }
+}
+
+# Редирект www → без www
+www.troyumba.ru {
+    redir https://troyumba.ru{uri} permanent
+}
