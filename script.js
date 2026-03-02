@@ -249,8 +249,13 @@ function renderTransactions(orders, withdrawals) {
       date:        fmtDate(w.created_at),
       title:       'Вывод средств',
       amount:      '−' + fmt(w.amount),
-      statusText:  w.status === 'done' ? 'Выполнено' : 'В обработке',
-      statusClass: w.status === 'done' ? 'done' : 'pending',
+      statusText:  w.status === 'done'       ? 'Выполнено'
+                 : w.status === 'failed'     ? 'Ошибка'
+                 : w.status === 'processing' ? 'Обрабатывается'
+                 : 'В обработке',
+      statusClass: w.status === 'done'   ? 'done'
+                 : w.status === 'failed' ? 'failed'
+                 : 'pending',
     });
   }
 

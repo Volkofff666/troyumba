@@ -1030,8 +1030,9 @@ input, select, textarea { font-family: inherit; }
   font-size: 0.72rem;
   font-weight: 600;
 }
-.tx-status.pending { background: #FEF9C3; color: #854D0E; }
-.tx-status.done    { background: var(--c-success-bg); color: #166534; }
+.tx-status.pending    { background: #FEF9C3; color: #854D0E; }
+.tx-status.done       { background: var(--c-success-bg); color: #166534; }
+.tx-status.failed     { background: #FEE2E2; color: #991B1B; }
 
 .tx-empty {
   text-align: center;

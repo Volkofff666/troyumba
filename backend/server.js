@@ -12,6 +12,9 @@ const {
   FK_SHOP_ID,
   FK_API_KEY,
   FK_SECRET_WORD_2,
+  // ID платёжных систем для выплат (найти в admin.freekassa.ru → Выплаты → Доступные методы)
+  FK_PAYOUT_CARD_PS_ID = '4',   // банковская карта
+  FK_PAYOUT_SBP_PS_ID  = '44',  // СБП (по номеру телефона)
   SITE_URL = 'https://troyumba.ru',
   PORT = 3000,
 } = process.env;
@@ -80,6 +83,7 @@ db.exec(`
 // Миграции: добавляем колонки если DB уже существовала без них
 try { db.exec(`ALTER TABLE orders ADD COLUMN is_winner INTEGER NOT NULL DEFAULT 0`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN win_amount REAL NOT NULL DEFAULT 0`); } catch {}
+try { db.exec(`ALTER TABLE withdrawals ADD COLUMN fk_withdrawal_id TEXT`); } catch {}
 
 /* Подготовленные выражения */
 const stmtInsert = db.prepare(`
@@ -213,6 +217,12 @@ app.post('/api/create-order', async (req, res) => {
 });
 
 /**
+ * GET /api/payment/notify
+ * FreeKassa проверяет доступность URL через GET перед активацией магазина
+ */
+app.get('/api/payment/notify', (req, res) => res.send('YES'));
+
+/**
  * POST /api/payment/notify
  * FreeKassa webhook — запускает механику выигрыша
  */
@@ -325,8 +335,10 @@ app.get('/api/account', (req, res) => {
 /**
  * POST /api/withdraw
  * Body: { email, amount, method, details }
+ * method: 'card' | 'sbp'
+ * details: номер карты (card) или номер телефона (sbp)
  */
-app.post('/api/withdraw', (req, res) => {
+app.post('/api/withdraw', async (req, res) => {
   const { email, amount, method, details } = req.body ?? {};
 
   const cleanEmail = (email || '').trim().toLowerCase();
@@ -343,19 +355,19 @@ app.post('/api/withdraw', (req, res) => {
     return res.status(400).json({ error: 'Неверный способ вывода' });
   }
 
-  if (!details || String(details).trim().length < 3) {
+  const cleanDetails = String(details || '').trim();
+  if (cleanDetails.length < 3) {
     return res.status(400).json({ error: 'Укажите реквизиты' });
   }
 
-  const doWithdraw = db.transaction(() => {
+  // 1. Атомарно: проверить баланс, списать, создать запись pending
+  const wdId = 'WD_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex').toUpperCase();
+
+  const prepareWithdraw = db.transaction(() => {
     const wallet  = db.prepare(`SELECT balance FROM wallets WHERE LOWER(email) = ?`).get(cleanEmail);
     const balance = wallet ? wallet.balance : 0;
 
-    if (numAmount > balance) {
-      return { error: 'Недостаточно средств' };
-    }
-
-    const wdId = 'WD_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex').toUpperCase();
+    if (numAmount > balance) return { error: 'Недостаточно средств' };
 
     db.prepare(`
       UPDATE wallets SET balance = balance - ?, updated_at = datetime('now')
@@ -363,18 +375,63 @@ app.post('/api/withdraw', (req, res) => {
     `).run(numAmount, cleanEmail);
 
     db.prepare(`
-      INSERT INTO withdrawals (id, email, amount, method, details) VALUES (?, ?, ?, ?, ?)
-    `).run(wdId, cleanEmail, numAmount, method, String(details).trim());
+      INSERT INTO withdrawals (id, email, amount, method, details, status)
+      VALUES (?, ?, ?, ?, ?, 'pending')
+    `).run(wdId, cleanEmail, numAmount, method, cleanDetails);
 
-    return { ok: true, id: wdId };
+    return { ok: true };
   });
 
-  const result = doWithdraw();
+  const prepared = prepareWithdraw();
+  if (prepared.error) return res.status(400).json({ error: prepared.error });
 
-  if (result.error) return res.status(400).json({ error: result.error });
+  // 2. Вызов FreeKassa Payout API
+  const psId  = method === 'sbp' ? FK_PAYOUT_SBP_PS_ID : FK_PAYOUT_CARD_PS_ID;
+  const nonce = String(Date.now());
 
-  console.log(`[WITHDRAW] ${cleanEmail} запросил вывод ${numAmount} ₽ (${method})`);
-  res.json(result);
+  const signParams = {
+    account:         cleanDetails,
+    amount:          String(numAmount),
+    currency:        'RUB',
+    nonce,
+    paymentId:       wdId,
+    paymentSystemId: psId,
+    shopId:          FK_SHOP_ID,
+  };
+  const signature = fkApiSignature(signParams);
+
+  let fkRes;
+  try {
+    const response = await fetch(`${FK_API_URL}withdrawals/create`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${FK_API_KEY}` },
+      body:    JSON.stringify({ ...signParams, signature }),
+    });
+    fkRes = await response.json();
+  } catch (err) {
+    console.error('[PAYOUT] Сетевая ошибка:', err.message);
+    // Восстановить баланс и пометить failed
+    db.prepare(`UPDATE wallets SET balance = balance + ?, updated_at = datetime('now') WHERE LOWER(email) = ?`)
+      .run(numAmount, cleanEmail);
+    db.prepare(`UPDATE withdrawals SET status = 'failed' WHERE id = ?`).run(wdId);
+    return res.status(502).json({ error: 'Ошибка соединения с платёжной системой.' });
+  }
+
+  if (fkRes.type !== 'success') {
+    console.error('[PAYOUT] Ошибка FreeKassa:', fkRes);
+    // Восстановить баланс и пометить failed
+    db.prepare(`UPDATE wallets SET balance = balance + ?, updated_at = datetime('now') WHERE LOWER(email) = ?`)
+      .run(numAmount, cleanEmail);
+    db.prepare(`UPDATE withdrawals SET status = 'failed' WHERE id = ?`).run(wdId);
+    return res.status(400).json({ error: fkRes.message ?? 'Ошибка выплаты. Попробуйте позже.' });
+  }
+
+  // 3. Успех — FK принял выплату в обработку
+  db.prepare(`UPDATE withdrawals SET status = 'processing', fk_withdrawal_id = ? WHERE id = ?`)
+    .run(String(fkRes.id ?? ''), wdId);
+
+  console.log(`[PAYOUT] ${cleanEmail} — вывод ${numAmount} ₽ (${method}) принят FK. FK ID: ${fkRes.id}, WD: ${wdId}`);
+  res.json({ ok: true, id: wdId });
 });
 
 /* ==========================================
