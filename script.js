@@ -82,29 +82,6 @@ async function handleFKPayment(e) {
 }
 
 /* ==========================================
-   AUTH MODAL
-   ========================================== */
-
-function switchAuth(mode) {
-  const isLogin = mode === 'login';
-  document.getElementById('loginForm').style.display    = isLogin ? '' : 'none';
-  document.getElementById('registerForm').style.display = isLogin ? 'none' : '';
-  document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabReg').classList.toggle('active', !isLogin);
-  hideNotice(document.getElementById('authNotice'));
-}
-
-function handleLogin(e) {
-  e.preventDefault();
-  showNotice(document.getElementById('authNotice'), 'success', 'Функция входа будет реализована при подключении бэкенда.');
-}
-
-function handleRegister(e) {
-  e.preventDefault();
-  showNotice(document.getElementById('authNotice'), 'success', 'Функция регистрации будет реализована при подключении бэкенда.');
-}
-
-/* ==========================================
    MODAL SYSTEM
    ========================================== */
 

@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 </head>
 <body>
 
@@ -23,14 +22,14 @@
         </a>
 
         <div class="nav-links">
-          <a href="#pricing" class="nav-link">Тарифы</a>
+          <a href="#pricing"  class="nav-link">Тарифы</a>
           <a href="#features" class="nav-link">Возможности</a>
           <a href="account.html" class="nav-link">Кабинет</a>
         </div>
 
         <div class="nav-actions">
-          <button class="btn btn-ghost btn-sm" onclick="openModal('authModal','login')">Войти</button>
-          <button class="btn btn-primary btn-sm" onclick="openModal('authModal','register')">Начать бесплатно</button>
+          <a href="account.html" class="btn btn-ghost btn-sm">Войти</a>
+          <button class="btn btn-primary btn-sm" onclick="scrollToSection('pricing')">Купить тариф</button>
         </div>
 
         <button class="hamburger" id="hamburger" aria-label="Меню">
@@ -42,13 +41,13 @@
 
   <!-- Mobile Navigation -->
   <div class="mobile-nav" id="mobileNav">
-    <a href="#pricing"  class="mobile-nav-link" onclick="closeMobileNav()">Тарифы</a>
-    <a href="#features" class="mobile-nav-link" onclick="closeMobileNav()">Возможности</a>
-    <a href="account.html" class="mobile-nav-link">Личный кабинет</a>
+    <a href="#pricing"     class="mobile-nav-link" onclick="closeMobileNav()">Тарифы</a>
+    <a href="#features"    class="mobile-nav-link" onclick="closeMobileNav()">Возможности</a>
+    <a href="account.html" class="mobile-nav-link" onclick="closeMobileNav()">Личный кабинет</a>
     <div class="mobile-nav-sep"></div>
     <div class="mobile-nav-btns">
-      <button class="btn btn-on-dark-outline btn-full" onclick="closeMobileNav(); openModal('authModal','login')">Войти</button>
-      <button class="btn btn-on-dark btn-full" onclick="closeMobileNav(); openModal('authModal','register')">Начать бесплатно</button>
+      <a href="account.html" class="btn btn-on-dark-outline btn-full" onclick="closeMobileNav()">Войти в кабинет</a>
+      <button class="btn btn-on-dark btn-full" onclick="closeMobileNav(); scrollToSection('pricing')">Купить тариф</button>
     </div>
   </div>
 
@@ -75,9 +74,9 @@
             <button class="btn btn-on-dark btn-lg" onclick="scrollToSection('pricing')">
               <i class="fas fa-bolt"></i> Выбрать тариф
             </button>
-            <button class="btn btn-on-dark-outline btn-lg" onclick="openModal('authModal','register')">
-              Попробовать бесплатно
-            </button>
+            <a href="account.html" class="btn btn-on-dark-outline btn-lg">
+              Личный кабинет
+            </a>
           </div>
 
           <div class="hero-stats">
@@ -233,14 +232,14 @@
     <section class="cta-section">
       <div class="container">
         <h2>Начните прямо сейчас</h2>
-        <p>Попробуйте бесплатно — никаких кредитных карт не нужно.</p>
+        <p>Выберите тариф и получите доступ к API за несколько минут.</p>
         <div class="cta-btns">
           <button class="btn btn-on-dark btn-lg" onclick="scrollToSection('pricing')">
             <i class="fas fa-bolt"></i> Выбрать тариф
           </button>
-          <button class="btn btn-on-dark-outline btn-lg" onclick="openModal('authModal','register')">
-            Попробовать бесплатно
-          </button>
+          <a href="account.html" class="btn btn-on-dark-outline btn-lg">
+            Личный кабинет
+          </a>
         </div>
       </div>
     </section>
@@ -290,56 +289,6 @@
     </div>
   </footer>
 
-  <!-- ===== AUTH MODAL ===== -->
-  <div class="modal-overlay" id="authModal">
-    <div class="modal-box">
-      <div class="modal-handle"></div>
-      <button class="modal-close" onclick="closeModal('authModal')"><i class="fas fa-times"></i></button>
-
-      <h2 class="modal-title" id="authTitle">Добро пожаловать</h2>
-      <p class="modal-sub" id="authSub">Войдите или создайте аккаунт</p>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tabLogin" onclick="switchAuth('login')">Войти</button>
-        <button class="auth-tab" id="tabReg" onclick="switchAuth('register')">Регистрация</button>
-      </div>
-
-      <div id="authNotice" class="notice"></div>
-
-      <!-- Login form -->
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input class="form-input" type="email" placeholder="you@example.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Пароль</label>
-          <input class="form-input" type="password" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-full btn-lg">Войти</button>
-        <p class="form-switch">Нет аккаунта? <a href="#" onclick="switchAuth('register'); return false;">Зарегистрироваться</a></p>
-      </form>
-
-      <!-- Register form -->
-      <form id="registerForm" style="display:none" onsubmit="handleRegister(event)">
-        <div class="form-group">
-          <label class="form-label">Имя</label>
-          <input class="form-input" type="text" placeholder="Ваше имя" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input class="form-input" type="email" placeholder="you@example.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Пароль</label>
-          <input class="form-input" type="password" placeholder="Минимум 6 символов" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-full btn-lg">Создать аккаунт</button>
-        <p class="form-switch">Уже есть аккаунт? <a href="#" onclick="switchAuth('login'); return false;">Войти</a></p>
-      </form>
-    </div>
-  </div>
-
   <!-- ===== PAYMENT MODAL (FreeKassa) ===== -->
   <div class="modal-overlay" id="paymentModal">
     <div class="modal-box">
@@ -349,7 +298,6 @@
       <h2 class="modal-title">Оплата пакета</h2>
       <p class="modal-sub">Вы будете перенаправлены на защищённую страницу оплаты FreeKassa.</p>
 
-      <!-- Order summary -->
       <div class="pay-plan-box">
         <div class="pay-plan-name" id="payModalPlanName">Профессиональный</div>
         <div class="pay-plan-details" id="payModalPlanDetails">3 000 запросов · 60 дней</div>
@@ -359,7 +307,6 @@
         </div>
       </div>
 
-      <!-- FreeKassa badge -->
       <div class="fk-badge">
         <i class="fas fa-shield-alt"></i>
         <span>Оплата через <strong>FreeKassa</strong> — безопасно и быстро</span>
@@ -370,7 +317,8 @@
       <form id="paymentForm" onsubmit="handleFKPayment(event)">
         <div class="form-group">
           <label class="form-label">Email для чека</label>
-          <input class="form-input" type="email" id="payEmail" placeholder="you@example.com" required>
+          <input class="form-input" type="email" id="payEmail" placeholder="you@example.com"
+                 autocomplete="email" required>
         </div>
         <button type="submit" class="btn btn-primary btn-full btn-lg" id="payBtn">
           <i class="fas fa-lock"></i>
