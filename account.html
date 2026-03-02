@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  <!-- ===== HEADER ===== -->
+  <!-- HEADER -->
   <header class="header" id="header">
     <div class="container">
       <nav class="nav">
@@ -19,17 +19,14 @@
           <span class="logo-mark"><i class="fas fa-key"></i></span>
           Troymba
         </a>
-
         <div class="nav-links">
           <a href="index.html#pricing"  class="nav-link">Тарифы</a>
           <a href="index.html#features" class="nav-link">Возможности</a>
           <a href="account.html"        class="nav-link">Кабинет</a>
         </div>
-
         <div class="nav-actions">
           <a href="index.html" class="btn btn-ghost btn-sm">На главную</a>
         </div>
-
         <button class="hamburger" id="hamburger" aria-label="Меню">
           <span></span><span></span><span></span>
         </button>
@@ -48,24 +45,23 @@
     </div>
   </div>
 
-  <!-- ===== ACCOUNT PAGE ===== -->
+  <!-- ACCOUNT PAGE -->
   <div class="account-page">
 
-    <!-- Shown when logged in -->
+    <!-- ===== DASHBOARD (shown when logged in) ===== -->
     <div id="dashboardView" style="display:none">
 
-      <!-- Hero banner -->
       <div class="account-hero">
         <div class="container">
           <div class="account-hero-content">
             <div class="account-hero-top">
               <div>
-                <h1 id="heroGreeting">Привет!</h1>
+                <h1>Личный кабинет</h1>
                 <p id="heroEmail">—</p>
               </div>
               <div class="account-hero-actions">
                 <a href="index.html#pricing" class="btn btn-on-dark-outline btn-sm">
-                  <i class="fas fa-plus"></i> Пополнить
+                  <i class="fas fa-plus"></i> Купить тариф
                 </a>
                 <button class="btn btn-on-dark-outline btn-sm" id="logoutBtn">
                   <i class="fas fa-sign-out-alt"></i> Выйти
@@ -76,20 +72,20 @@
         </div>
       </div>
 
-      <!-- Body -->
       <div class="account-body">
         <div class="container">
           <div class="account-grid">
 
-            <!-- Left sidebar: balance + profile -->
+            <!-- Left sidebar -->
             <div style="display:flex; flex-direction:column; gap:1.25rem;">
 
               <!-- Balance card -->
               <div class="a-card">
                 <div class="a-card-body">
                   <div class="balance-box">
-                    <div class="balance-label">Баланс</div>
+                    <div class="balance-label">Баланс для вывода</div>
                     <div class="balance-value" id="balanceValue">0 ₽</div>
+                    <div class="balance-hint" id="balanceHint"></div>
                   </div>
                   <button class="btn btn-primary btn-full" id="withdrawOpenBtn">
                     <i class="fas fa-arrow-up"></i> Вывести средства
@@ -97,38 +93,33 @@
                 </div>
               </div>
 
-              <!-- Profile card -->
+              <!-- Win mechanic progress -->
               <div class="a-card">
                 <div class="a-card-head">
-                  <span class="a-card-title">Профиль</span>
+                  <span class="a-card-title">
+                    <i class="fas fa-trophy" style="color:#F59E0B;margin-right:.4rem"></i>
+                    Кто выиграет следующим
+                  </span>
                 </div>
-                <div class="a-card-body">
-                  <div class="profile-row">
-                    <span class="profile-row-label">Имя</span>
-                    <span class="profile-row-value" id="profileName">—</span>
-                  </div>
-                  <div class="profile-row">
-                    <span class="profile-row-label">Email</span>
-                    <span class="profile-row-value" id="profileEmail">—</span>
-                  </div>
-                  <div class="profile-row">
-                    <span class="profile-row-label">Статус</span>
-                    <span class="profile-row-value" style="color:var(--c-success)">Активен</span>
-                  </div>
+                <div class="a-card-body" id="planProgressList">
+                  <div class="tx-empty"><span class="spinner" style="width:20px;height:20px;border-width:2px"></span></div>
+                </div>
+                <div class="a-card-foot">
+                  <p class="win-mechanic-note">
+                    Каждый 3-й покупатель любого тарифа получает кэшбэк в размере стоимости покупки.
+                  </p>
                 </div>
               </div>
 
             </div>
 
-            <!-- Right: transactions -->
+            <!-- Right: history -->
             <div class="a-card">
               <div class="a-card-head">
                 <span class="a-card-title">История операций</span>
-                <button class="btn btn-ghost btn-sm">
-                  <i class="fas fa-download"></i> Экспорт
-                </button>
+                <span id="txCount" class="tx-badge" style="display:none"></span>
               </div>
-              <div class="a-card-body">
+              <div class="a-card-body" style="padding:0">
                 <div class="tx-table">
                   <div class="tx-head">
                     <span>Дата</span>
@@ -136,7 +127,9 @@
                     <span>Сумма</span>
                     <span>Статус</span>
                   </div>
-                  <div id="txList"></div>
+                  <div id="txList">
+                    <div class="tx-empty"><span class="spinner" style="width:20px;height:20px;border-width:2px"></span></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,16 +139,15 @@
       </div>
     </div>
 
-    <!-- Shown when NOT logged in -->
+    <!-- ===== LOGIN (shown when not logged in) ===== -->
     <div id="registerView">
-      <!-- Hero for registration -->
       <div class="account-hero">
         <div class="container">
           <div class="account-hero-content">
             <div class="account-hero-top">
               <div>
                 <h1>Личный кабинет</h1>
-                <p>Войдите или зарегистрируйтесь для доступа к балансу и операциям</p>
+                <p>Введите email, чтобы проверить баланс и историю покупок</p>
               </div>
               <a href="index.html" class="btn btn-on-dark-outline btn-sm">На главную</a>
             </div>
@@ -165,39 +157,51 @@
 
       <div class="account-body">
         <div class="container">
-          <div style="max-width:480px; margin-inline:auto;">
+          <div style="max-width:480px; margin-inline:auto; display:flex; flex-direction:column; gap:1.25rem;">
+
+            <!-- Login form -->
             <div class="a-card">
               <div class="a-card-head">
-                <span class="a-card-title">Создать аккаунт</span>
+                <span class="a-card-title">Войти в кабинет</span>
               </div>
               <div class="a-card-body">
-                <p style="font-size:0.9rem; color:var(--c-text-muted); margin-bottom:1.5rem;">
-                  Зарегистрируйтесь, чтобы получить доступ к балансу, истории платежей и управлению ключами.
+                <p style="font-size:.9rem;color:var(--c-text-muted);margin-bottom:1.25rem;">
+                  Используйте email, который указали при оплате тарифа.
                 </p>
-
-                <div id="regNotice" class="notice"></div>
-
-                <form id="regForm">
-                  <div class="form-group">
-                    <label class="form-label">Имя</label>
-                    <input class="form-input" type="text" name="name" placeholder="Ваше имя" required>
-                  </div>
+                <div id="loginNotice" class="notice"></div>
+                <form id="loginForm">
                   <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input class="form-input" type="email" name="email" placeholder="you@example.com" required>
+                    <input class="form-input" type="email" name="email"
+                           placeholder="you@example.com" autocomplete="email" required>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Пароль</label>
-                    <input class="form-input" type="password" name="password" placeholder="Минимум 6 символов" required>
-                  </div>
-                  <button type="submit" class="btn btn-primary btn-full btn-lg">Создать аккаунт</button>
+                  <button type="submit" class="btn btn-primary btn-full btn-lg">
+                    Войти
+                  </button>
                 </form>
-
-                <p style="font-size:0.8rem; color:var(--c-text-muted); text-align:center; margin-top:1rem;">
-                  Регистрируясь, вы принимаете <a href="#" style="color:var(--c-primary)">условия использования</a>
+                <p style="font-size:.8rem;color:var(--c-text-muted);text-align:center;margin-top:1rem;">
+                  Ещё не покупали? <a href="index.html#pricing" style="color:var(--c-primary)">Выбрать тариф</a>
                 </p>
               </div>
             </div>
+
+            <!-- Win mechanic preview (shown on login page too) -->
+            <div class="a-card win-promo-card">
+              <div class="a-card-body">
+                <div class="win-promo-icon"><i class="fas fa-trophy"></i></div>
+                <h3 class="win-promo-title">Каждый 3-й покупатель выигрывает!</h3>
+                <p class="win-promo-desc">
+                  Купите любой тариф — если вы окажетесь 3-м, 6-м или 9-м покупателем,
+                  вы получаете кэшбэк на полную стоимость покупки. Деньги можно вывести в личном кабинете.
+                </p>
+                <div class="win-promo-example">
+                  <div class="win-promo-slot bought"><i class="fas fa-user"></i><span>Покупатель 1</span></div>
+                  <div class="win-promo-slot bought"><i class="fas fa-user"></i><span>Покупатель 2</span></div>
+                  <div class="win-promo-slot winner"><i class="fas fa-trophy"></i><span>Победитель!</span></div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -221,7 +225,6 @@
           <div class="footer-links">
             <a href="index.html#features">Возможности</a>
             <a href="index.html#pricing">Тарифы</a>
-            <a href="#">Документация</a>
           </div>
         </div>
         <div>
@@ -259,21 +262,25 @@
 
       <form id="withdrawForm">
         <div class="form-group">
-          <label class="form-label">Сумма</label>
-          <input class="form-input" type="number" name="amount" min="1" step="1" placeholder="Введите сумму" required>
+          <label class="form-label">Сумма вывода</label>
+          <input class="form-input" type="number" name="amount" min="1" step="1"
+                 placeholder="Введите сумму" required>
         </div>
         <div class="form-group">
           <label class="form-label">Способ вывода</label>
           <select name="method" class="form-select" required>
             <option value="card">Банковская карта</option>
-            <option value="sbp">СБП</option>
+            <option value="sbp">СБП (по номеру телефона)</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Реквизиты</label>
-          <input class="form-input" type="text" name="details" placeholder="Номер карты или телефона" required>
+          <input class="form-input" type="text" name="details"
+                 placeholder="Номер карты или телефона" required>
         </div>
-        <button type="submit" class="btn btn-primary btn-full btn-lg">Отправить заявку</button>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">
+          Отправить заявку
+        </button>
       </form>
     </div>
   </div>

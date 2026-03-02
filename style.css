@@ -1068,3 +1068,209 @@ input, select, textarea { font-family: inherit; }
   margin: 0 auto;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==========================================
+   WIN MECHANIC — Plan Progress
+   ========================================== */
+
+.a-card-foot {
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--c-border-light);
+  padding-top: .75rem;
+  margin-top: .25rem;
+}
+
+.win-mechanic-note {
+  font-size: .78rem;
+  color: var(--c-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.plan-progress-item { margin-bottom: 1.25rem; }
+.plan-progress-item:last-child { margin-bottom: 0; }
+
+.plan-progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+
+.plan-progress-name {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.plan-progress-prize {
+  font-size: .875rem;
+  font-weight: 700;
+  color: #D97706;
+  background: #FEF3C7;
+  padding: .15rem .5rem;
+  border-radius: var(--r-full);
+}
+
+/* Three dots */
+.plan-progress-track {
+  display: flex;
+  gap: .375rem;
+  align-items: center;
+}
+
+.pdot {
+  flex: 1;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--c-border);
+  transition: background .3s;
+}
+
+.pdot-filled { background: var(--c-primary); }
+
+/* Third dot = winner slot */
+.pdot-win { background: var(--c-border); }
+.pdot-win.pdot-filled { background: #F59E0B; }
+
+/* Pulse on "next" slot */
+.pdot-next { animation: pdot-pulse 1.4s ease-in-out infinite; }
+@keyframes pdot-pulse {
+  0%, 100% { opacity: .4; }
+  50%       { opacity: 1; }
+}
+
+/* When the next = winner slot */
+.pdot-win.pdot-next {
+  background: #FDE68A;
+  animation: pdot-win-pulse 1.2s ease-in-out infinite;
+}
+@keyframes pdot-win-pulse {
+  0%, 100% { background: #FDE68A; }
+  50%       { background: #F59E0B; }
+}
+
+.plan-progress-hint {
+  font-size: .78rem;
+  color: var(--c-text-muted);
+  margin-top: .4rem;
+}
+
+.pdot-hint-win {
+  color: #B45309;
+  font-weight: 600;
+}
+
+/* ==========================================
+   WIN MECHANIC — Transaction badges
+   ========================================== */
+
+.win-badge {
+  display: inline-block;
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .1rem .45rem;
+  border-radius: var(--r-full);
+  vertical-align: middle;
+  margin-left: .4rem;
+}
+
+.tx-row-cashback {
+  background: #FFFBEB;
+}
+
+.tx-row-cashback .tx-amount.plus {
+  color: #D97706;
+  font-weight: 700;
+}
+
+.tx-badge {
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+  font-size: .75rem;
+  font-weight: 600;
+  padding: .15rem .55rem;
+  border-radius: var(--r-full);
+}
+
+/* ==========================================
+   WIN MECHANIC — Login page promo card
+   ========================================== */
+
+.win-promo-card {
+  border: 1.5px solid #FDE68A;
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+}
+
+.win-promo-icon {
+  width: 48px;
+  height: 48px;
+  background: #F59E0B;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.25rem;
+  margin-bottom: .75rem;
+}
+
+.win-promo-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-text);
+  margin-bottom: .5rem;
+}
+
+.win-promo-desc {
+  font-size: .875rem;
+  color: var(--c-text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.win-promo-example {
+  display: flex;
+  gap: .625rem;
+}
+
+.win-promo-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  padding: .75rem .5rem;
+  border-radius: var(--r-md);
+  font-size: .78rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.win-promo-slot.bought {
+  background: var(--c-white);
+  color: var(--c-text-muted);
+  border: 1px solid var(--c-border);
+}
+
+.win-promo-slot.bought i { color: var(--c-text-muted); }
+
+.win-promo-slot.winner {
+  background: #F59E0B;
+  color: #fff;
+  border: 1px solid #D97706;
+}
+
+.win-promo-slot.winner i { color: #fff; }
+
+/* Balance hint */
+.balance-hint {
+  font-size: .8rem;
+  color: var(--c-success);
+  margin-top: .25rem;
+  min-height: 1.1em;
+}

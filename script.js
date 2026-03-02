@@ -220,127 +220,271 @@ function hideNotice(el) {
 
 document.addEventListener('DOMContentLoaded', initAccount);
 
-function initAccount() {
+const EMAIL_KEY = 'troymbaEmail';
+
+function getSavedEmail() { return localStorage.getItem(EMAIL_KEY) || ''; }
+function saveEmail(e)    { localStorage.setItem(EMAIL_KEY, e); }
+function clearEmail()    { localStorage.removeItem(EMAIL_KEY); }
+
+async function fetchAccount(email) {
+  const r = await fetch('/api/account?email=' + encodeURIComponent(email));
+  if (!r.ok) throw new Error('server error');
+  return r.json();
+}
+
+/* ---- Render transaction list ---- */
+function renderTransactions(orders, withdrawals) {
+  const container = document.getElementById('txList');
+  if (!container) return;
+
+  const rows = [];
+
+  // Paid orders
+  for (const o of (orders || [])) {
+    if (o.status !== 'paid') continue;
+    const date = fmtDate(o.paid_at || o.created_at);
+
+    rows.push({
+      date,
+      title:       o.plan_name,
+      amount:      '−' + fmt(o.amount),
+      statusText:  'Оплачено',
+      statusClass: 'done',
+      isWinner:    o.is_winner === 1,
+    });
+
+    // Cashback row for winners
+    if (o.is_winner === 1) {
+      rows.push({
+        date,
+        title:       '🏆 Кэшбэк победителя',
+        amount:      '+' + fmt(o.win_amount),
+        statusText:  'Зачислено',
+        statusClass: 'done',
+        isCashback:  true,
+      });
+    }
+  }
+
+  // Withdrawal rows
+  for (const w of (withdrawals || [])) {
+    rows.push({
+      date:        fmtDate(w.created_at),
+      title:       'Вывод средств',
+      amount:      '−' + fmt(w.amount),
+      statusText:  w.status === 'done' ? 'Выполнено' : 'В обработке',
+      statusClass: w.status === 'done' ? 'done' : 'pending',
+    });
+  }
+
+  if (rows.length === 0) {
+    container.innerHTML = '<div class="tx-empty"><i class="fas fa-inbox"></i>Пока нет операций</div>';
+    return;
+  }
+
+  const txCount = document.getElementById('txCount');
+  if (txCount) { txCount.textContent = rows.length; txCount.style.display = ''; }
+
+  container.innerHTML = rows.map(r => `
+    <div class="tx-row${r.isCashback ? ' tx-row-cashback' : ''}">
+      <span class="tx-date">${r.date}</span>
+      <span class="tx-title">
+        ${r.title}
+        ${r.isWinner ? '<span class="win-badge">Победитель</span>' : ''}
+      </span>
+      <span class="tx-amount ${r.amount.startsWith('+') ? 'plus' : 'minus'}">${r.amount}</span>
+      <span><span class="tx-status ${r.statusClass}">${r.statusText}</span></span>
+    </div>
+  `).join('');
+}
+
+/* ---- Render plan progress ---- */
+function renderPlanProgress(progress) {
+  const container = document.getElementById('planProgressList');
+  if (!container || !progress) return;
+
+  const WIN_EVERY = 3;
+
+  const html = Object.entries(progress).map(([, p]) => {
+    const slot       = p.slot;          // 0,1,2 in current cycle
+    const nextWinIn  = WIN_EVERY - slot; // purchases until next win
+
+    // 3 dots: first two are regular buyers, third is the winner slot
+    const dots = [1, 2, 3].map(i => {
+      let cls = 'pdot';
+      if (i <= slot)     cls += ' pdot-filled';
+      if (i === WIN_EVERY) cls += ' pdot-win';
+      if (i === slot + 1) cls += ' pdot-next';
+      return `<div class="${cls}"></div>`;
+    }).join('');
+
+    const isNextWinner = slot === WIN_EVERY - 1;
+    const hint = isNextWinner
+      ? `<span class="pdot-hint-win">Следующий покупатель выигрывает!</span>`
+      : `Место ${slot + 1} из ${WIN_EVERY} &mdash; через ${nextWinIn}\u00a0${pluralize(nextWinIn, 'покупку', 'покупки', 'покупок')} выигрыш`;
+
+    return `
+      <div class="plan-progress-item">
+        <div class="plan-progress-top">
+          <span class="plan-progress-name">${p.name}</span>
+          <span class="plan-progress-prize">+${fmt(p.amount)}</span>
+        </div>
+        <div class="plan-progress-track">${dots}</div>
+        <div class="plan-progress-hint">${hint}</div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+/* ---- Show / hide views ---- */
+function showDashboard(email, data) {
+  document.getElementById('registerView').style.display  = 'none';
+  document.getElementById('dashboardView').style.display = '';
+
+  document.getElementById('heroEmail').textContent = email;
+
+  const balance = data.balance || 0;
+  document.getElementById('balanceValue').textContent = fmt(balance);
+
+  const hint = document.getElementById('balanceHint');
+  if (hint) hint.textContent = balance > 0 ? 'Доступно для вывода' : '';
+
+  renderTransactions(data.orders, data.withdrawals);
+  renderPlanProgress(data.plan_progress);
+}
+
+function showRegister() {
+  document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('registerView').style.display  = '';
+}
+
+/* ---- Main init ---- */
+async function initAccount() {
   const regView  = document.getElementById('registerView');
   const dashView = document.getElementById('dashboardView');
   if (!regView && !dashView) return;
 
-  const regForm        = document.getElementById('regForm');
-  const logoutBtn      = document.getElementById('logoutBtn');
-  const withdrawOpen   = document.getElementById('withdrawOpenBtn');
-  const withdrawForm   = document.getElementById('withdrawForm');
-  const withdrawNotice = document.getElementById('withdrawNotice');
+  // Auto-login from saved email
+  const savedEmail = getSavedEmail();
+  if (savedEmail) {
+    try {
+      const data = await fetchAccount(savedEmail);
+      showDashboard(savedEmail, data);
+    } catch {
+      clearEmail();
+      showRegister();
+    }
+    return;
+  }
 
-  function loadUser()   { try { return JSON.parse(localStorage.getItem('troymbaUser'));   } catch { return null; } }
-  function loadWallet() { try { return JSON.parse(localStorage.getItem('troymbaWallet')); } catch { return null; } }
+  showRegister();
 
-  let user   = loadUser();
-  let wallet = loadWallet() || { balance: 0, currency: '₽', transactions: [] };
+  // Login form
+  document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email  = this.querySelector('[name="email"]').value.trim();
+    const notice = document.getElementById('loginNotice');
+    const btn    = this.querySelector('button[type="submit"]');
 
-  function renderTransactions(txList) {
-    const container = document.getElementById('txList');
-    if (!container) return;
-    container.innerHTML = '';
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto"></span>';
 
-    if (!txList || txList.length === 0) {
-      container.innerHTML = '<div class="tx-empty"><i class="fas fa-inbox"></i>Пока нет операций</div>';
-      return;
+    try {
+      const data = await fetchAccount(email);
+      saveEmail(email);
+      showDashboard(email, data);
+    } catch {
+      showNotice(notice, 'error', 'Ошибка сервера. Попробуйте позже.');
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  });
+
+  // Logout
+  document.getElementById('logoutBtn')?.addEventListener('click', function() {
+    clearEmail();
+    showRegister();
+  });
+
+  // Open withdraw modal
+  document.getElementById('withdrawOpenBtn')?.addEventListener('click', function() {
+    const notice  = document.getElementById('withdrawNotice');
+    const balance = parseFloat(
+      (document.getElementById('balanceValue')?.textContent || '0').replace(/[^\d.]/g, '')
+    ) || 0;
+    hideNotice(notice);
+    if (balance <= 0) showNotice(notice, 'error', 'Недостаточно средств для вывода.');
+    openModal('withdrawModal');
+  });
+
+  // Withdraw form submit
+  document.getElementById('withdrawForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email   = getSavedEmail();
+    const amount  = Number(this.querySelector('[name="amount"]').value);
+    const method  = this.querySelector('[name="method"]').value;
+    const details = this.querySelector('[name="details"]').value.trim();
+    const notice  = document.getElementById('withdrawNotice');
+    const btn     = this.querySelector('button[type="submit"]');
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showNotice(notice, 'error', 'Введите корректную сумму.'); return;
     }
 
-    txList.forEach(tx => {
-      const isNeg = tx.amount.trim().startsWith('-');
-      const row   = document.createElement('div');
-      row.className = 'tx-row';
-      row.innerHTML = `
-        <span class="tx-date">${tx.date}</span>
-        <span class="tx-title">${tx.title}</span>
-        <span class="tx-amount ${isNeg ? 'minus' : 'plus'}">${tx.amount}</span>
-        <span><span class="tx-status ${tx.status === 'Завершено' ? 'done' : 'pending'}">${tx.status}</span></span>
-      `;
-      container.appendChild(row);
-    });
-  }
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto"></span> Отправка...';
 
-  function showDashboard(u) {
-    if (regView)  regView.style.display  = 'none';
-    if (dashView) dashView.style.display = '';
-    document.getElementById('heroGreeting').textContent = 'Привет, ' + u.name + '!';
-    document.getElementById('heroEmail').textContent    = u.email;
-    document.getElementById('profileName').textContent  = u.name;
-    document.getElementById('profileEmail').textContent = u.email;
-    document.getElementById('balanceValue').textContent = wallet.balance + ' ' + wallet.currency;
-    renderTransactions(wallet.transactions);
-  }
-
-  function showRegister() {
-    if (dashView) dashView.style.display = 'none';
-    if (regView)  regView.style.display  = '';
-  }
-
-  if (user) showDashboard(user);
-  else      showRegister();
-
-  if (regForm) {
-    regForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name     = regForm.querySelector('[name="name"]').value.trim();
-      const email    = regForm.querySelector('[name="email"]').value.trim();
-      const password = regForm.querySelector('[name="password"]').value.trim();
-      const notice   = document.getElementById('regNotice');
-
-      if (password.length < 6) { showNotice(notice, 'error', 'Пароль должен быть минимум 6 символов.'); return; }
-
-      user = { name, email };
-      localStorage.setItem('troymbaUser', JSON.stringify(user));
-      wallet = { balance: 0, currency: '₽', transactions: [] };
-      localStorage.setItem('troymbaWallet', JSON.stringify(wallet));
-      showDashboard(user);
-    });
-  }
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', function() {
-      localStorage.removeItem('troymbaUser');
-      user = null;
-      showRegister();
-    });
-  }
-
-  if (withdrawOpen) {
-    withdrawOpen.addEventListener('click', function() {
-      hideNotice(withdrawNotice);
-      if (wallet.balance <= 0) {
-        showNotice(withdrawNotice, 'error', 'Недостаточно средств для вывода.');
-      }
-      openModal('withdrawModal');
-    });
-  }
-
-  if (withdrawForm) {
-    withdrawForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const amount = Number(withdrawForm.querySelector('[name="amount"]').value);
-
-      if (!Number.isFinite(amount) || amount <= 0) {
-        showNotice(withdrawNotice, 'error', 'Введите корректную сумму.'); return;
-      }
-      if (amount > wallet.balance) {
-        showNotice(withdrawNotice, 'error', 'Сумма превышает доступный баланс.'); return;
-      }
-
-      wallet.balance -= amount;
-      wallet.transactions.unshift({
-        date:   new Date().toLocaleDateString('ru-RU'),
-        title:  'Заявка на вывод',
-        amount: '-' + amount + ' ' + wallet.currency,
-        status: 'В обработке',
+    try {
+      const r = await fetch('/api/withdraw', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, amount, method, details }),
       });
-      localStorage.setItem('troymbaWallet', JSON.stringify(wallet));
-      document.getElementById('balanceValue').textContent = wallet.balance + ' ' + wallet.currency;
-      renderTransactions(wallet.transactions);
-      showNotice(withdrawNotice, 'success', 'Заявка принята. Средства поступят в течение 1–3 рабочих дней.');
-      withdrawForm.reset();
-      setTimeout(() => closeModal('withdrawModal'), 1200);
-    });
-  }
+      const data = await r.json();
+
+      if (!r.ok) {
+        showNotice(notice, 'error', data.error ?? 'Ошибка сервера.');
+        btn.disabled = false;
+        btn.innerHTML = origText;
+        return;
+      }
+
+      // Refresh balance and history
+      const fresh = await fetchAccount(email);
+      document.getElementById('balanceValue').textContent = fmt(fresh.balance || 0);
+      renderTransactions(fresh.orders, fresh.withdrawals);
+
+      showNotice(notice, 'success', 'Заявка принята. Средства поступят в течение 1–3 рабочих дней.');
+      this.reset();
+      setTimeout(() => closeModal('withdrawModal'), 1500);
+    } catch {
+      showNotice(notice, 'error', 'Ошибка соединения с сервером.');
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  });
+}
+
+/* ---- Helpers ---- */
+function fmt(n) {
+  return Number(n).toLocaleString('ru-RU') + '\u00a0₽';
+}
+
+function fmtDate(str) {
+  if (!str) return '—';
+  return new Date(str + (str.includes('T') ? '' : 'Z')).toLocaleDateString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: '2-digit',
+  });
+}
+
+function pluralize(n, one, few, many) {
+  const mod10  = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+  return many;
 }
