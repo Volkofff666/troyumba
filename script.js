@@ -358,10 +358,9 @@ async function initAccount() {
       clearEmail();
       showRegister();
     }
-    return;
+  } else {
+    showRegister();
   }
-
-  showRegister();
 
   // Login form
   document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
