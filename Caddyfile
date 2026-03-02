@@ -1,18 +1,10 @@
-{
-    auto_https off
-}
-
-:80 {
+troyumba.ru {
     encode gzip
 
     log {
         output stdout
         format console
     }
-
-    # www -> non-www redirect
-    @www host www.troyumba.ru
-    redir @www http://troyumba.ru{uri} permanent
 
     header {
         X-Content-Type-Options nosniff
@@ -36,4 +28,9 @@
         try_files {path} {path}.html /index.html
         file_server
     }
+}
+
+# www -> non-www redirect
+www.troyumba.ru {
+    redir https://troyumba.ru{uri} permanent
 }

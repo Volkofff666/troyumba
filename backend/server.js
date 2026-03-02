@@ -32,8 +32,9 @@ const PLANS = {
   business:     { name: 'Бизнес',           amount: 1000, currency: 'RUB' },
 };
 
-// Каждый WIN_EVERY-й покупатель тарифа получает кэшбэк в размере стоимости тарифа
-const WIN_EVERY = 3;
+// Каждый WIN_EVERY-й покупатель тарифа получает кэшбэк WIN_MULTIPLIER * стоимость тарифа
+const WIN_EVERY      = 3;
+const WIN_MULTIPLIER = 2; // победитель получает x2 от цены покупки
 
 /* ==========================================
    DATABASE
@@ -245,7 +246,7 @@ app.post('/api/payment/notify', (req, res) => {
     let isWinner = false;
     if (count % WIN_EVERY === 0) {
       isWinner = true;
-      const winAmount = order.amount;
+      const winAmount = order.amount * WIN_MULTIPLIER; // x2 от стоимости покупки
 
       db.prepare(`UPDATE orders SET is_winner = 1, win_amount = ? WHERE id = ?`)
         .run(winAmount, MERCHANT_ORDER_ID);
@@ -269,7 +270,7 @@ app.post('/api/payment/notify', (req, res) => {
   } else {
     console.log(`[PAID] Заказ ${MERCHANT_ORDER_ID} оплачен. Email: ${P_EMAIL ?? order.email}, Сумма: ${AMOUNT} ₽, FK TX: ${intid}. Покупка #${result.count} тарифа «${order.plan_key}»`);
     if (result.isWinner) {
-      console.log(`[WIN] Победитель! ${order.email} получает кэшбэк ${order.amount} ₽ (покупка #${result.count})`);
+      console.log(`[WIN] Победитель! ${order.email} получает ${order.amount * WIN_MULTIPLIER} ₽ (x${WIN_MULTIPLIER} от ${order.amount} ₽, покупка #${result.count})`);
     }
   }
 
@@ -311,9 +312,10 @@ app.get('/api/account', (req, res) => {
     const { count } = stmtCountPaidByPlan.get(key);
     plan_progress[key] = {
       name:       plan.name,
-      amount:     plan.amount,
-      total_paid: count,               // всего оплаченных покупок этого тарифа
-      slot:       count % WIN_EVERY,   // 0,1,2 → позиция в текущем цикле
+      price:      plan.amount,                      // цена тарифа
+      win_amount: plan.amount * WIN_MULTIPLIER,     // приз победителя (x2)
+      total_paid: count,
+      slot:       count % WIN_EVERY,
     };
   }
 

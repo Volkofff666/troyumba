@@ -327,7 +327,7 @@ function renderPlanProgress(progress) {
       <div class="plan-progress-item">
         <div class="plan-progress-top">
           <span class="plan-progress-name">${p.name}</span>
-          <span class="plan-progress-prize">+${fmt(p.amount)}</span>
+          <span class="plan-progress-prize">+${fmt(p.win_amount)}</span>
         </div>
         <div class="plan-progress-track">${dots}</div>
         <div class="plan-progress-hint">${hint}</div>
