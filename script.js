@@ -11,7 +11,9 @@ const PLANS = {
   business:     { name: 'Бизнес',           details: '7 000 запросов · 90 дней', price: 1000 },
 };
 
-let currentPlanKey = null;
+let currentPlanKey        = null;
+let selectedPaymentSystem = null;
+let _psCache              = null;
 
 /* ==========================================
    PAYMENT MODAL
@@ -30,7 +32,50 @@ function openPayment(planKey, price) {
   document.getElementById('payEmail').value = '';
 
   hideNotice(document.getElementById('payNotice'));
+  fetchPaymentMethods();
   openModal('paymentModal');
+}
+
+async function fetchPaymentMethods() {
+  const wrap = document.getElementById('payMethodsWrap');
+  const list = document.getElementById('payMethodsList');
+  selectedPaymentSystem = null;
+
+  if (_psCache) { renderPaymentMethods(_psCache); return; }
+
+  list.innerHTML = '<div class="pay-methods-msg">Загрузка методов оплаты…</div>';
+  wrap.style.display = 'block';
+
+  try {
+    const res  = await fetch('/api/payment-methods');
+    const data = await res.json();
+    if (!res.ok || !data.methods) {
+      list.innerHTML = '<div class="pay-methods-msg" style="color:#DC2626">Не удалось загрузить методы.</div>';
+      return;
+    }
+    _psCache = data.methods;
+    renderPaymentMethods(data.methods);
+  } catch {
+    list.innerHTML = '<div class="pay-methods-msg" style="color:#DC2626">Нет соединения с сервером.</div>';
+  }
+}
+
+function renderPaymentMethods(methods) {
+  const wrap = document.getElementById('payMethodsWrap');
+  const list = document.getElementById('payMethodsList');
+  list.innerHTML = methods.map(m =>
+    `<div class="pay-method-item" data-id="${m.id}" onclick="selectPayMethod(${m.id},this)">
+       <div class="pay-method-dot"></div><span>${m.name}</span>
+     </div>`
+  ).join('');
+  wrap.style.display = 'block';
+  if (methods.length > 0) selectPayMethod(methods[0].id, list.querySelector('.pay-method-item'));
+}
+
+function selectPayMethod(id, el) {
+  document.querySelectorAll('#payMethodsList .pay-method-item').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  selectedPaymentSystem = id;
 }
 
 /**
@@ -49,6 +94,10 @@ async function handleFKPayment(e) {
     showNotice(notice, 'error', 'Введите email для чека.');
     return;
   }
+  if (!selectedPaymentSystem) {
+    showNotice(notice, 'error', 'Выберите способ оплаты.');
+    return;
+  }
 
   // Блокируем кнопку, показываем загрузку
   btn.disabled = true;
@@ -59,7 +108,7 @@ async function handleFKPayment(e) {
     const res = await fetch('/api/create-order', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ planKey: currentPlanKey, email }),
+      body:    JSON.stringify({ planKey: currentPlanKey, email, paymentSystem: selectedPaymentSystem }),
     });
 
     const data = await res.json();

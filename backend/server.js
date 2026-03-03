@@ -154,16 +154,58 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
+ * GET /api/payment-methods
+ * Возвращает список доступных методов оплаты из FreeKassa (с кешем 10 мин)
+ */
+let _psCache = null;
+let _psCacheAt = 0;
+
+app.get('/api/payment-methods', async (req, res) => {
+  if (_psCache && Date.now() - _psCacheAt < 600_000) {
+    return res.json({ methods: _psCache });
+  }
+
+  const nonce = String(Date.now());
+  const signParams = { nonce, shopId: FK_SHOP_ID };
+
+  let fkRes;
+  try {
+    const response = await fetch(`${FK_API_URL}currencies`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${FK_API_KEY}` },
+      body:    JSON.stringify({ ...signParams, signature: fkApiSignature(signParams) }),
+    });
+    fkRes = await response.json();
+  } catch (err) {
+    console.error('[FK] Ошибка методов оплаты:', err.message);
+    return res.status(502).json({ error: 'Ошибка соединения с FK.' });
+  }
+
+  if (fkRes.type !== 'success' || !Array.isArray(fkRes.currencies)) {
+    console.error('[FK] Неожиданный ответ currencies:', fkRes);
+    return res.status(502).json({ error: 'Не удалось получить методы оплаты.' });
+  }
+
+  _psCache    = fkRes.currencies.map(c => ({ id: c.id, name: c.name }));
+  _psCacheAt  = Date.now();
+  res.json({ methods: _psCache });
+});
+
+/**
  * POST /api/create-order
- * Body: { planKey, email }
+ * Body: { planKey, email, paymentSystem }
  */
 app.post('/api/create-order', async (req, res) => {
-  const { planKey, email } = req.body ?? {};
+  const { planKey, email, paymentSystem } = req.body ?? {};
 
   const plan = PLANS[planKey];
   if (!plan) return res.status(400).json({ error: 'Неверный тариф' });
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Неверный email' });
+  }
+  const psId = parseInt(paymentSystem, 10);
+  if (!Number.isFinite(psId) || psId <= 0) {
+    return res.status(400).json({ error: 'Выберите способ оплаты.' });
   }
 
   const paymentId = generateOrderId();
@@ -175,7 +217,7 @@ app.post('/api/create-order', async (req, res) => {
     shopId:          FK_SHOP_ID,
     nonce,
     paymentId,
-    i:               0,   // ID платёжной системы (0 = показать выбор на странице FK)
+    i:               psId,
     email,
     ip,
     amount:          String(plan.amount),

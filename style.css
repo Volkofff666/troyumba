@@ -905,6 +905,34 @@ input, select, textarea { font-family: inherit; }
 }
 .fk-badge i { color: var(--c-primary); font-size: 1.1rem; }
 
+/* ---- Payment method selector ---- */
+.pay-method-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--c-border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pay-method-item:hover  { border-color: var(--c-primary); }
+.pay-method-item.active { border-color: var(--c-primary); background: #EEF2FF; }
+.pay-method-dot {
+  width: 18px; height: 18px;
+  border: 2px solid var(--c-border);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pay-method-item.active .pay-method-dot {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+}
+.pay-methods-msg { font-size: 0.85rem; color: var(--c-text-muted); padding: 0.4rem 0; }
+
 /* ---- Account Page ---- */
 .account-page { min-height: 100svh; background: var(--c-bg); padding-top: 64px; }
 
