@@ -175,6 +175,7 @@ app.post('/api/create-order', async (req, res) => {
     shopId:          FK_SHOP_ID,
     nonce,
     paymentId,
+    i:               0,   // ID платёжной системы (0 = показать выбор на странице FK)
     email,
     ip,
     amount:          String(plan.amount),
