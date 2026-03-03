@@ -172,7 +172,7 @@ app.post('/api/create-order', async (req, res) => {
 
   const signParams = {
     shopId: FK_SHOP_ID, nonce, paymentId,
-    i: String(plan.amount), email, ip,
+    email, ip,
     amount: String(plan.amount), currency: plan.currency,
   };
 
