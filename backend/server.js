@@ -186,8 +186,17 @@ app.get('/api/payment-methods', async (req, res) => {
     return res.status(502).json({ error: 'Не удалось получить методы оплаты.' });
   }
 
-  _psCache    = fkRes.currencies.map(c => ({ id: c.id, name: c.name }));
-  _psCacheAt  = Date.now();
+  const all  = fkRes.currencies;
+  const card = all.find(c => /карт|card|visa|mastercard|mir/i.test(c.name));
+  const sbp  = all.find(c => /сбп|sbp|быстрых/i.test(c.name));
+
+  const filtered = [];
+  if (card) filtered.push({ id: card.id, name: 'Банковская карта' });
+  if (sbp)  filtered.push({ id: sbp.id,  name: 'СБП' });
+
+  // Если паттерн не совпал — отдаём всё (не ломать)
+  _psCache   = filtered.length ? filtered : all.map(c => ({ id: c.id, name: c.name }));
+  _psCacheAt = Date.now();
   res.json({ methods: _psCache });
 });
 
