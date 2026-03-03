@@ -170,23 +170,21 @@ app.post('/api/create-order', async (req, res) => {
   const nonce     = String(Date.now());
   const ip        = getClientIp(req);
 
-  const signParams = {
-    shopId: FK_SHOP_ID, nonce, paymentId,
-    email, ip,
-    amount: String(plan.amount), currency: plan.currency,
-  };
-
-  const signature = fkApiSignature(signParams);
-
-  const fkBody = {
-    shopId: FK_SHOP_ID, nonce, paymentId, email, ip,
-    amount: String(plan.amount),
-    currency: plan.currency,
+  // Сначала строим тело без подписи, затем считаем подпись от ВСЕХ полей
+  const fkBodyBase = {
+    shopId:          FK_SHOP_ID,
+    nonce,
+    paymentId,
+    email,
+    ip,
+    amount:          String(plan.amount),
+    currency:        plan.currency,
     successUrl:      `${SITE_URL}/success.html`,
     failUrl:         `${SITE_URL}/fail.html`,
     notificationUrl: `${SITE_URL}/api/payment/notify`,
-    signature,
   };
+
+  const fkBody = { ...fkBodyBase, signature: fkApiSignature(fkBodyBase) };
 
   stmtInsert.run({
     id: paymentId, planKey, planName: plan.name,
@@ -217,20 +215,15 @@ app.post('/api/create-order', async (req, res) => {
 });
 
 /**
- * GET /api/payment/notify
- * FreeKassa проверяет доступность URL через GET перед активацией магазина
+ * GET + POST /api/payment/notify
+ * FreeKassa webhook — запускает механику выигрыша.
+ * Поддерживаем оба метода: в личном кабинете FK можно выбрать GET или POST.
  */
-app.get('/api/payment/notify', (req, res) => res.send('YES'));
-
-/**
- * POST /api/payment/notify
- * FreeKassa webhook — запускает механику выигрыша
- */
-app.post('/api/payment/notify', (req, res) => {
-  const { MERCHANT_ID, AMOUNT, MERCHANT_ORDER_ID, P_EMAIL, intid, SIGN } = req.body ?? {};
+function handleNotify(params, res) {
+  const { MERCHANT_ID, AMOUNT, MERCHANT_ORDER_ID, P_EMAIL, intid, SIGN } = params;
 
   if (!MERCHANT_ID || !AMOUNT || !MERCHANT_ORDER_ID || !SIGN) {
-    console.warn('[NOTIFY] Неполные параметры:', req.body);
+    console.warn('[NOTIFY] Неполные параметры:', params);
     return res.status(400).send('BAD REQUEST');
   }
 
@@ -285,7 +278,10 @@ app.post('/api/payment/notify', (req, res) => {
   }
 
   res.send('YES');
-});
+}
+
+app.get('/api/payment/notify',  (req, res) => handleNotify(req.query,       res));
+app.post('/api/payment/notify', (req, res) => handleNotify(req.body ?? {}, res));
 
 /**
  * GET /api/account?email=...
