@@ -10,6 +10,7 @@ const Database = require('better-sqlite3');
    ========================================== */
 const {
   FK_SHOP_ID,
+  FK_SECRET_WORD_1,
   FK_API_KEY,
   FK_SECRET_WORD_2,
   // ID платёжных систем для выплат (найти в admin.freekassa.ru → Выплаты → Доступные методы)
@@ -19,8 +20,8 @@ const {
   PORT = 3000,
 } = process.env;
 
-if (!FK_SHOP_ID || !FK_API_KEY || !FK_SECRET_WORD_2) {
-  console.error('[ERROR] Не заданы переменные окружения FK_SHOP_ID / FK_API_KEY / FK_SECRET_WORD_2');
+if (!FK_SHOP_ID || !FK_SECRET_WORD_1 || !FK_API_KEY || !FK_SECRET_WORD_2) {
+  console.error('[ERROR] Не заданы переменные окружения FK_SHOP_ID / FK_SECRET_WORD_1 / FK_API_KEY / FK_SECRET_WORD_2');
   process.exit(1);
 }
 
@@ -91,10 +92,6 @@ const stmtInsert = db.prepare(`
   VALUES (@id, @planKey, @planName, @amount, @currency, @email, @ip)
 `);
 
-const stmtSetFKId = db.prepare(`
-  UPDATE orders SET fk_order_id = @fkOrderId WHERE id = @id
-`);
-
 const stmtMarkPaid = db.prepare(`
   UPDATE orders SET status = 'paid', paid_at = datetime('now')
   WHERE id = @id AND status != 'paid'
@@ -116,6 +113,13 @@ function generateOrderId() {
 function fkApiSignature(params) {
   const values = Object.keys(params).sort().map(k => params[k]).join('|');
   return crypto.createHmac('sha256', FK_API_KEY).update(values).digest('hex');
+}
+
+/** Подпись для SCI-страницы оплаты: MD5(shopId:amount:secretWord1:currency:orderId) */
+function fkSciSign(amount, currency, orderId) {
+  return crypto.createHash('md5')
+    .update(`${FK_SHOP_ID}:${amount}:${FK_SECRET_WORD_1}:${currency}:${orderId}`)
+    .digest('hex');
 }
 
 function verifyNotifySign(merchantId, amount, orderId, sign) {
@@ -154,116 +158,41 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
- * GET /api/payment-methods
- * Возвращает список доступных методов оплаты из FreeKassa (с кешем 10 мин)
- */
-let _psCache = null;
-let _psCacheAt = 0;
-
-app.get('/api/payment-methods', async (req, res) => {
-  if (_psCache && Date.now() - _psCacheAt < 600_000) {
-    return res.json({ methods: _psCache });
-  }
-
-  const nonce = String(Date.now());
-  const signParams = { nonce, shopId: FK_SHOP_ID };
-
-  let fkRes;
-  try {
-    const response = await fetch(`${FK_API_URL}currencies`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${FK_API_KEY}` },
-      body:    JSON.stringify({ ...signParams, signature: fkApiSignature(signParams) }),
-    });
-    fkRes = await response.json();
-  } catch (err) {
-    console.error('[FK] Ошибка методов оплаты:', err.message);
-    return res.status(502).json({ error: 'Ошибка соединения с FK.' });
-  }
-
-  if (fkRes.type !== 'success' || !Array.isArray(fkRes.currencies)) {
-    console.error('[FK] Неожиданный ответ currencies:', fkRes);
-    return res.status(502).json({ error: 'Не удалось получить методы оплаты.' });
-  }
-
-  const all  = fkRes.currencies;
-  const card = all.find(c => /карт|card|visa|mastercard|mir/i.test(c.name));
-  const sbp  = all.find(c => /сбп|sbp|быстрых/i.test(c.name));
-
-  const filtered = [];
-  if (card) filtered.push({ id: card.id, name: 'Банковская карта' });
-  if (sbp)  filtered.push({ id: sbp.id,  name: 'СБП' });
-
-  // Если паттерн не совпал — отдаём всё (не ломать)
-  _psCache   = filtered.length ? filtered : all.map(c => ({ id: c.id, name: c.name }));
-  _psCacheAt = Date.now();
-  res.json({ methods: _psCache });
-});
-
-/**
  * POST /api/create-order
- * Body: { planKey, email, paymentSystem }
+ * Body: { planKey, email }
+ * Возвращает SCI-ссылку на pay.fk.money — FK сам покажет страницу выбора способа оплаты.
  */
-app.post('/api/create-order', async (req, res) => {
-  const { planKey, email, paymentSystem } = req.body ?? {};
+app.post('/api/create-order', (req, res) => {
+  const { planKey, email } = req.body ?? {};
 
   const plan = PLANS[planKey];
   if (!plan) return res.status(400).json({ error: 'Неверный тариф' });
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Неверный email' });
   }
-  const psId = parseInt(paymentSystem, 10);
-  if (!Number.isFinite(psId) || psId <= 0) {
-    return res.status(400).json({ error: 'Выберите способ оплаты.' });
-  }
 
   const paymentId = generateOrderId();
-  const nonce     = String(Date.now());
   const ip        = getClientIp(req);
-
-  // Сначала строим тело без подписи, затем считаем подпись от ВСЕХ полей
-  const fkBodyBase = {
-    shopId:          FK_SHOP_ID,
-    nonce,
-    paymentId,
-    i:               psId,
-    email,
-    ip,
-    amount:          String(plan.amount),
-    currency:        plan.currency,
-    successUrl:      `${SITE_URL}/success.html`,
-    failUrl:         `${SITE_URL}/fail.html`,
-    notificationUrl: `${SITE_URL}/api/payment/notify`,
-  };
-
-  const fkBody = { ...fkBodyBase, signature: fkApiSignature(fkBodyBase) };
 
   stmtInsert.run({
     id: paymentId, planKey, planName: plan.name,
     amount: plan.amount, currency: plan.currency, email, ip,
   });
 
-  let fkRes;
-  try {
-    const response = await fetch(`${FK_API_URL}orders/create`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${FK_API_KEY}` },
-      body:    JSON.stringify(fkBody),
-    });
-    fkRes = await response.json();
-  } catch (err) {
-    console.error('[FreeKassa] Сетевая ошибка:', err.message);
-    return res.status(502).json({ error: 'Ошибка соединения с платёжной системой.' });
-  }
+  const sign = fkSciSign(plan.amount, plan.currency, paymentId);
+  const params = new URLSearchParams({
+    m:        FK_SHOP_ID,
+    oa:       plan.amount,
+    currency: plan.currency,
+    o:        paymentId,
+    s:        sign,
+    lang:     'ru',
+    us_login: email,
+  });
 
-  if (fkRes.type !== 'success') {
-    console.error('[FreeKassa] Ошибка создания заказа:', fkRes);
-    return res.status(400).json({ error: fkRes.message ?? 'Платёжная система вернула ошибку.' });
-  }
-
-  stmtSetFKId.run({ fkOrderId: fkRes.orderId, id: paymentId });
-  console.log(`[ORDER] Создан заказ ${paymentId} (FK #${fkRes.orderId}) на ${plan.amount} ₽ для ${email}`);
-  res.json({ url: fkRes.location });
+  const url = `https://pay.fk.money/?${params}`;
+  console.log(`[ORDER] Создан заказ ${paymentId} на ${plan.amount} ₽ для ${email}`);
+  res.json({ url });
 });
 
 /**
