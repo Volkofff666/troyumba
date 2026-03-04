@@ -186,8 +186,8 @@ app.post('/api/create-order', (req, res) => {
     currency: plan.currency,
     o:        paymentId,
     s:        sign,
+    em:       email,
     lang:     'ru',
-    us_login: email,
   });
 
   const url = `https://pay.fk.money/?${params}`;
