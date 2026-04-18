@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Оформление заказа — Troymba</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- ===== MINIMAL HEADER ===== -->
+  <header class="header" id="header">
+    <div class="container">
+      <nav class="nav">
+        <a href="index.html" class="logo">
+          <span class="logo-mark"><i class="fas fa-key"></i></span>
+          Troymba
+        </a>
+
+        <div class="co-steps-bar">
+          <span class="co-step done"><i class="fas fa-check"></i> Тариф</span>
+          <span class="co-step-sep"><i class="fas fa-chevron-right"></i></span>
+          <span class="co-step active">Оформление</span>
+          <span class="co-step-sep"><i class="fas fa-chevron-right"></i></span>
+          <span class="co-step">Оплата</span>
+        </div>
+
+        <a href="index.html#pricing" class="btn btn-ghost btn-sm">
+          <i class="fas fa-arrow-left"></i> Тарифы
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="checkout-main">
+    <div class="container">
+      <div class="checkout-grid">
+
+        <!-- ===== LEFT: ORDER SUMMARY ===== -->
+        <div class="checkout-summary">
+          <div class="co-card">
+            <div class="co-plan-header">
+              <div class="co-plan-icon" id="checkoutPlanIcon">
+                <i class="fas fa-star"></i>
+              </div>
+              <div>
+                <div class="co-plan-name" id="checkoutPlanName">Профессиональный</div>
+                <div class="co-plan-desc" id="checkoutPlanDesc">3 000 запросов · 60 дней</div>
+              </div>
+            </div>
+
+            <div class="co-price-wrap">
+              <div class="co-price" id="checkoutPrice">500 ₽</div>
+              <div class="co-price-per" id="checkoutPricePerReq">0.17 ₽ за запрос</div>
+            </div>
+
+            <ul class="co-features-list plan-features" id="checkoutFeatures">
+              <!-- populated by JS -->
+            </ul>
+
+            <a href="index.html#pricing" class="co-change-link">
+              <i class="fas fa-exchange-alt"></i> Изменить тариф
+            </a>
+          </div>
+
+          <div class="co-trust">
+            <div class="co-trust-item">
+              <i class="fas fa-shield-alt"></i>
+              <span>Защищённый платёж через SSL/TLS</span>
+            </div>
+            <div class="co-trust-item">
+              <i class="fas fa-bolt"></i>
+              <span>API ключ выдаётся сразу после оплаты</span>
+            </div>
+            <div class="co-trust-item">
+              <i class="fas fa-headset"></i>
+              <span>Поддержка 24/7 на support@troyumba.ru</span>
+            </div>
+            <div class="co-trust-item">
+              <i class="fas fa-undo"></i>
+              <span>Разовая оплата, без подписок и скрытых платежей</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RIGHT: CHECKOUT FORM ===== -->
+        <div class="checkout-form-col">
+
+          <!-- Form card -->
+          <div class="co-card">
+            <h1 class="co-title">Оформление заказа</h1>
+            <p class="co-subtitle">Введите email — на него придёт API ключ и чек об оплате</p>
+
+            <div id="payNotice" class="notice"></div>
+
+            <form id="paymentForm" onsubmit="handleFKPayment(event)">
+              <div class="form-group">
+                <label class="form-label" for="payEmail">Email адрес</label>
+                <input class="form-input" type="email" id="payEmail"
+                       placeholder="you@example.com"
+                       autocomplete="email" required>
+                <div class="form-hint">На этот адрес придёт ваш API ключ и подтверждение платежа</div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full btn-lg" id="payBtn">
+                <i class="fas fa-lock"></i>
+                Перейти к оплате — <span id="payBtnAmount">500</span> ₽
+              </button>
+            </form>
+
+            <div class="co-fk-info">
+              <i class="fas fa-shield-alt"></i>
+              <span>Оплата через <strong>FreeKassa</strong> — безопасно и быстро. Принимаем карты Visa / Mastercard / МИР, СБП, ЮMoney и другие способы.</span>
+            </div>
+          </div>
+
+          <!-- FAQ card -->
+          <div class="co-card">
+            <div class="co-faq-title">Частые вопросы</div>
+
+            <div class="co-faq-item">
+              <div class="co-faq-q">
+                <i class="fas fa-circle-question"></i>
+                Когда получу API ключ?
+              </div>
+              <div class="co-faq-a">
+                Сразу после успешной оплаты — ключ появится в <a href="account.html">личном кабинете</a> и придёт на указанный email.
+              </div>
+            </div>
+
+            <div class="co-faq-item">
+              <div class="co-faq-q">
+                <i class="fas fa-circle-question"></i>
+                Как использовать ключ?
+              </div>
+              <div class="co-faq-a">
+                Добавьте его в заголовок запроса:<br>
+                <code>Authorization: Bearer ВАШ_КЛЮЧ</code><br>
+                Подробная документация и примеры на всех языках есть в личном кабинете.
+              </div>
+            </div>
+
+            <div class="co-faq-item">
+              <div class="co-faq-q">
+                <i class="fas fa-circle-question"></i>
+                Что значит «срок действия»?
+              </div>
+              <div class="co-faq-a">
+                Срок — это период, в течение которого действует ключ. После его истечения ключ деактивируется. Неиспользованные запросы сгорают.
+              </div>
+            </div>
+
+            <div class="co-faq-item">
+              <div class="co-faq-q">
+                <i class="fas fa-circle-question"></i>
+                Что делать, если возникли проблемы?
+              </div>
+              <div class="co-faq-a">
+                Напишите нам на <a href="mailto:support@troyumba.ru">support@troyumba.ru</a> — отвечаем в течение нескольких часов.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

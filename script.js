@@ -6,31 +6,67 @@
 
 /* Данные о тарифах */
 const PLANS = {
-  starter:      { name: 'Стартовый',        details: '1 000 запросов · 30 дней', price: 200  },
-  professional: { name: 'Профессиональный', details: '3 000 запросов · 60 дней', price: 500  },
-  business:     { name: 'Бизнес',           details: '7 000 запросов · 90 дней', price: 1000 },
+  starter: {
+    name: 'Стартовый',
+    details: '1 000 запросов · 30 дней',
+    price: 200,
+    icon: 'fa-rocket',
+    pricePerReq: '0.20 ₽ за запрос',
+    features: ['1 000 запросов', 'Базовые модели ИИ', 'Email поддержка', 'Документация API', 'Срок: 30 дней'],
+  },
+  professional: {
+    name: 'Профессиональный',
+    details: '3 000 запросов · 60 дней',
+    price: 500,
+    icon: 'fa-star',
+    pricePerReq: '0.17 ₽ за запрос',
+    features: ['3 000 запросов', 'Все доступные модели', 'Приоритетная поддержка', 'Аналитика и статистика', 'Webhook интеграция', 'Срок: 60 дней'],
+  },
+  business: {
+    name: 'Бизнес',
+    details: '7 000 запросов · 90 дней',
+    price: 1000,
+    icon: 'fa-crown',
+    pricePerReq: '0.14 ₽ за запрос',
+    features: ['7 000 запросов', 'Премиум модели', 'Персональный менеджер', 'SLA 99.9% uptime', 'Custom интеграции', 'Срок: 90 дней'],
+  },
 };
 
 let currentPlanKey = null;
 
 /* ==========================================
-   PAYMENT MODAL
+   CHECKOUT PAGE INIT
    ========================================== */
 
-/** Открыть модал оплаты */
-function openPayment(planKey, price) {
+function initCheckout() {
+  if (!document.getElementById('checkoutPlanName')) return;
+
+  const planKey = new URLSearchParams(window.location.search).get('plan');
   const plan = PLANS[planKey];
-  if (!plan) return;
+
+  if (!plan) {
+    window.location.href = 'index.html#pricing';
+    return;
+  }
+
   currentPlanKey = planKey;
+  document.title = 'Оформление: ' + plan.name + ' — Troymba';
 
-  document.getElementById('payModalPlanName').textContent    = plan.name;
-  document.getElementById('payModalPlanDetails').textContent = plan.details;
-  document.getElementById('payModalTotal').textContent       = price.toLocaleString('ru-RU') + ' ₽';
-  document.getElementById('payBtnAmount').textContent        = price.toLocaleString('ru-RU');
-  document.getElementById('payEmail').value = '';
+  document.getElementById('checkoutPlanName').textContent   = plan.name;
+  document.getElementById('checkoutPlanDesc').textContent   = plan.details;
+  document.getElementById('checkoutPrice').textContent      = plan.price.toLocaleString('ru-RU') + ' ₽';
+  document.getElementById('checkoutPricePerReq').textContent = plan.pricePerReq;
+  document.getElementById('payBtnAmount').textContent       = plan.price.toLocaleString('ru-RU');
 
-  hideNotice(document.getElementById('payNotice'));
-  openModal('paymentModal');
+  const iconEl = document.getElementById('checkoutPlanIcon');
+  if (iconEl) iconEl.innerHTML = '<i class="fas ' + plan.icon + '"></i>';
+
+  const featuresEl = document.getElementById('checkoutFeatures');
+  if (featuresEl) {
+    featuresEl.innerHTML = plan.features.map(f =>
+      '<li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>' + f + '</li>'
+    ).join('');
+  }
 }
 
 /**
@@ -195,7 +231,10 @@ function hideNotice(el) {
    ACCOUNT PAGE
    ========================================== */
 
-document.addEventListener('DOMContentLoaded', initAccount);
+document.addEventListener('DOMContentLoaded', function() {
+  initAccount();
+  initCheckout();
+});
 
 const EMAIL_KEY = 'troymbaEmail';
 

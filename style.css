@@ -1275,3 +1275,346 @@ input, select, textarea { font-family: inherit; }
   margin-top: .25rem;
   min-height: 1.1em;
 }
+
+/* ==========================================
+   HOW IT WORKS SECTION
+   ========================================== */
+
+.how-section {
+  padding: 80px 0;
+  background: var(--c-bg);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.steps-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 860px;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .steps-row {
+    grid-template-columns: 1fr 32px 1fr 32px 1fr;
+    align-items: center;
+    gap: 0;
+  }
+}
+
+.step-item {
+  background: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+}
+
+.step-num {
+  width: 40px; height: 40px;
+  background: var(--c-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0 auto 1rem;
+}
+
+.step-icon-wrap {
+  width: 52px; height: 52px;
+  background: var(--c-primary-light);
+  border-radius: var(--r-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem;
+  color: var(--c-primary);
+  margin: 0 auto 1rem;
+}
+
+.step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.step-desc {
+  font-size: 0.855rem;
+  color: var(--c-text-muted);
+  line-height: 1.6;
+}
+
+.step-connector {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .step-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-border);
+    font-size: 1.25rem;
+  }
+}
+
+/* ==========================================
+   PRICING — price-per-request hint
+   ========================================== */
+
+.plan-price-hint {
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+  margin-top: 0.3rem;
+}
+
+.pricing-card.featured .plan-price-hint {
+  color: rgba(99,102,241,0.65);
+}
+
+/* ==========================================
+   CHECKOUT PAGE
+   ========================================== */
+
+.checkout-main {
+  padding-top: 80px;
+  min-height: 100svh;
+  background: var(--c-bg);
+  padding-bottom: 4rem;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  padding: 2rem 0;
+}
+
+@media (min-width: 900px) {
+  .checkout-grid {
+    grid-template-columns: 380px 1fr;
+    gap: 2rem;
+    padding: 2.5rem 0;
+    align-items: start;
+  }
+}
+
+/* Mobile: form first */
+.checkout-form-col { order: -1; }
+@media (min-width: 900px) { .checkout-form-col { order: 0; } }
+
+.co-card {
+  background: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1rem;
+}
+
+.co-card:last-child { margin-bottom: 0; }
+
+/* Order summary */
+.co-plan-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.co-plan-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--r-md);
+  background: var(--c-primary-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  color: var(--c-primary);
+  flex-shrink: 0;
+}
+
+.co-plan-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.co-plan-desc {
+  font-size: 0.85rem;
+  color: var(--c-text-muted);
+  margin-top: 0.2rem;
+}
+
+.co-price-wrap {
+  margin-bottom: 1.5rem;
+}
+
+.co-price {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--c-primary);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.co-price-per {
+  font-size: 0.85rem;
+  color: var(--c-text-muted);
+  margin-top: 0.35rem;
+}
+
+.co-features-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+}
+
+.co-change-link {
+  font-size: 0.85rem;
+  color: var(--c-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity var(--t);
+}
+.co-change-link:hover { opacity: 0.75; text-decoration: underline; }
+
+/* Trust signals */
+.co-trust {
+  background: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.co-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+  color: var(--c-text-muted);
+}
+
+.co-trust-item i {
+  color: var(--c-success);
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Form column */
+.co-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.4rem;
+}
+
+.co-subtitle {
+  font-size: 0.9rem;
+  color: var(--c-text-muted);
+  margin-bottom: 1.75rem;
+  line-height: 1.5;
+}
+
+.form-hint {
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+  margin-top: 0.4rem;
+}
+
+.co-fk-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  color: var(--c-text-muted);
+  line-height: 1.55;
+}
+
+.co-fk-info i {
+  color: var(--c-primary);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* FAQ */
+.co-faq-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: var(--c-text);
+}
+
+.co-faq-item {
+  padding: 0.875rem 0;
+  border-top: 1px solid var(--c-border-light);
+}
+
+.co-faq-q {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.co-faq-q i { color: var(--c-primary); font-size: 0.8rem; }
+
+.co-faq-a {
+  font-size: 0.855rem;
+  color: var(--c-text-muted);
+  line-height: 1.6;
+  padding-left: 1.25rem;
+}
+
+.co-faq-a code {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  color: var(--c-primary);
+}
+
+.co-faq-a a { color: var(--c-primary); }
+
+/* Checkout progress bar in header */
+.co-steps-bar {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+@media (min-width: 560px) { .co-steps-bar { display: flex; } }
+
+.co-step {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.co-step.done { color: var(--c-success); }
+.co-step.active { color: var(--c-text); }
+
+.co-step-sep {
+  font-size: 0.6rem;
+  color: var(--c-border);
+  margin: 0 0.1rem;
+}

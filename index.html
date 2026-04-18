@@ -97,6 +97,44 @@
       </div>
     </section>
 
+    <!-- ===== HOW IT WORKS ===== -->
+    <section class="how-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow"><i class="fas fa-map-signs"></i> Как это работает</div>
+          <h2 class="section-title">Три шага до первого запроса</h2>
+          <p class="section-desc">Всё просто — от выбора тарифа до готового API ключа за несколько минут.</p>
+        </div>
+
+        <div class="steps-row">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-icon-wrap"><i class="fas fa-layer-group"></i></div>
+            <div class="step-title">Выбери тариф</div>
+            <p class="step-desc">Три пакета на любой бюджет — от тестирования до крупных проектов. Разовая оплата, никаких подписок.</p>
+          </div>
+
+          <div class="step-connector"><i class="fas fa-chevron-right"></i></div>
+
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-icon-wrap"><i class="fas fa-credit-card"></i></div>
+            <div class="step-title">Оплати онлайн</div>
+            <p class="step-desc">Безопасная оплата картой, СБП или электронным кошельком через FreeKassa. Занимает меньше минуты.</p>
+          </div>
+
+          <div class="step-connector"><i class="fas fa-chevron-right"></i></div>
+
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-icon-wrap"><i class="fas fa-key"></i></div>
+            <div class="step-title">Получи API ключ</div>
+            <p class="step-desc">Ключ сразу появится в личном кабинете и придёт на email. Добавьте его в запрос и начинайте генерировать.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ===== PRICING ===== -->
     <section class="pricing-section" id="pricing">
       <div class="container">
@@ -119,6 +157,7 @@
               <span class="plan-amount">200</span>
               <span class="plan-cur">₽</span>
             </div>
+            <div class="plan-price-hint">0.20 ₽ за запрос</div>
             <ul class="plan-features">
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>1 000 запросов</li>
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Базовые модели ИИ</li>
@@ -126,9 +165,9 @@
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Документация API</li>
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Срок: 30 дней</li>
             </ul>
-            <button class="btn btn-outline btn-full" onclick="openPayment('starter', 200)">
+            <a href="checkout.html?plan=starter" class="btn btn-outline btn-full">
               Купить пакет
-            </button>
+            </a>
           </div>
 
           <!-- Pro (featured) -->
@@ -143,6 +182,7 @@
               <span class="plan-amount">500</span>
               <span class="plan-cur">₽</span>
             </div>
+            <div class="plan-price-hint">0.17 ₽ за запрос</div>
             <ul class="plan-features">
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>3 000 запросов</li>
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Все доступные модели</li>
@@ -151,9 +191,9 @@
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Webhook интеграция</li>
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Срок: 60 дней</li>
             </ul>
-            <button class="btn btn-primary btn-full" onclick="openPayment('professional', 500)">
+            <a href="checkout.html?plan=professional" class="btn btn-primary btn-full">
               Купить пакет
-            </button>
+            </a>
           </div>
 
           <!-- Business -->
@@ -167,6 +207,7 @@
               <span class="plan-amount">1000</span>
               <span class="plan-cur">₽</span>
             </div>
+            <div class="plan-price-hint">0.14 ₽ за запрос</div>
             <ul class="plan-features">
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>7 000 запросов</li>
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Премиум модели</li>
@@ -175,9 +216,9 @@
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Custom интеграции</li>
               <li class="plan-feature"><span class="plan-check"><i class="fas fa-check"></i></span>Срок: 90 дней</li>
             </ul>
-            <button class="btn btn-outline btn-full" onclick="openPayment('business', 1000)">
+            <a href="checkout.html?plan=business" class="btn btn-outline btn-full">
               Купить пакет
-            </button>
+            </a>
           </div>
 
         </div>
@@ -288,50 +329,6 @@
       </div>
     </div>
   </footer>
-
-  <!-- ===== PAYMENT MODAL (FreeKassa) ===== -->
-  <div class="modal-overlay" id="paymentModal">
-    <div class="modal-box">
-      <div class="modal-handle"></div>
-      <button class="modal-close" onclick="closeModal('paymentModal')"><i class="fas fa-times"></i></button>
-
-      <h2 class="modal-title">Оплата пакета</h2>
-      <p class="modal-sub">Вы будете перенаправлены на защищённую страницу оплаты FreeKassa.</p>
-
-      <div class="pay-plan-box">
-        <div class="pay-plan-name" id="payModalPlanName">Профессиональный</div>
-        <div class="pay-plan-details" id="payModalPlanDetails">3 000 запросов · 60 дней</div>
-        <div class="pay-total-row">
-          <span class="pay-total-label">К оплате</span>
-          <span class="pay-total-value" id="payModalTotal">500 ₽</span>
-        </div>
-      </div>
-
-      <div class="fk-badge">
-        <i class="fas fa-shield-alt"></i>
-        <span>Оплата через <strong>FreeKassa</strong> — безопасно и быстро</span>
-      </div>
-
-      <div id="payNotice" class="notice"></div>
-
-      <form id="paymentForm" onsubmit="handleFKPayment(event)">
-        <div class="form-group">
-          <label class="form-label">Email для чека</label>
-          <input class="form-input" type="email" id="payEmail" placeholder="you@example.com"
-                 autocomplete="email" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-full btn-lg" id="payBtn">
-          <i class="fas fa-lock"></i>
-          Перейти к оплате — <span id="payBtnAmount">500</span> ₽
-        </button>
-      </form>
-
-      <div class="pay-security">
-        <i class="fas fa-lock"></i>
-        <span>Данные передаются по защищённому протоколу SSL/TLS</span>
-      </div>
-    </div>
-  </div>
 
   <script src="script.js"></script>
 </body>
